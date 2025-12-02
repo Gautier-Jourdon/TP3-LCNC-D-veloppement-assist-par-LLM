@@ -1,7 +1,7 @@
 :root {
-    font-family: "Segoe UI", Tahoma, sans-serif;
-    color: #121826;
-    background-color: #f4f6fb;
+    color: #0d1225;
+    background-color: #040510;
+    font-family: "Space Grotesk", "Segoe UI", Tahoma, sans-serif;
 }
 
 body {
@@ -10,23 +10,33 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    background: transparent;
+    overflow-x: hidden;
 }
 
 .page {
     width: min(1100px, 95vw);
     display: grid;
     gap: 1.5rem;
+    position: relative;
+    z-index: 1;
 }
 
 .panel {
-    background: #ffffff;
+    background: rgba(11, 13, 30, 0.75);
     padding: 1.5rem;
     border-radius: 16px;
-    box-shadow: 0 25px 60px rgba(9, 30, 66, 0.1);
+    box-shadow: 0 30px 80px rgba(8, 8, 22, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    color: #f5f6ff;
+    transition: transform 0.6s ease;
 }
 
 .panel h1 {
     margin: 0 0 1rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
 }
 
 .controls {
@@ -34,6 +44,11 @@ body {
     align-items: center;
     gap: 0.75rem;
     flex-wrap: wrap;
+    padding: 0.75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    transition: box-shadow 0.3s ease;
 }
 
 .controls label {
@@ -44,17 +59,25 @@ body {
     width: 80px;
     padding: 0.25rem 0.5rem;
     font-size: 1rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8f9ff;
+    text-align: center;
+    transition: border 0.2s ease, transform 0.3s ease;
 }
 
 .controls button {
     border: none;
-    background: #5b7cfa;
+    background: linear-gradient(120deg, #735bff, #5bd9ff);
     color: #ffffff;
     font-size: 1rem;
     padding: 0.6rem 1.5rem;
     border-radius: 999px;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .controls button:disabled {
@@ -63,23 +86,50 @@ body {
 }
 
 .controls button:not(:disabled):hover {
-    background: #4660c7;
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 15px 40px rgba(91, 124, 250, 0.45);
+    filter: saturate(1.2);
+}
+
+.controls button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255, 255, 255, 0.5), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.controls button:hover::after {
+    opacity: 1;
+}
+
+.controls:focus-within {
+    box-shadow: 0 0 0 2px rgba(91, 124, 250, 0.35);
+}
+
+.controls input:focus {
+    border-color: #5b7cfa;
+    outline: none;
+    transform: scale(1.03);
 }
 
 .status {
     margin-top: 0.75rem;
     font-size: 0.95rem;
-    color: #1e2437;
+    color: #c3d2ff;
 }
 
 .board {
-    background: #ffffff;
-    border-radius: 24px;
+    background: rgba(5, 7, 19, 0.88);
+    border-radius: 28px;
     padding: 2rem clamp(1rem, 3vw, 3rem);
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: clamp(1rem, 3vw, 2rem);
-    box-shadow: inset 0 0 0 1px rgba(18, 24, 38, 0.05);
+    box-shadow: 0 40px 120px rgba(2, 4, 12, 0.85);
+    position: relative;
+    overflow: hidden;
 }
 
 .tower {
@@ -97,7 +147,7 @@ body {
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #5a6279;
+    color: #7f8fff;
 }
 
 .peg {
@@ -149,4 +199,110 @@ body {
     .tower {
         height: 230px;
     }
+}
+
+.animated-bg {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(128, 92, 255, 0.4), transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(91, 217, 255, 0.35), transparent 45%),
+        radial-gradient(circle at 50% 100%, rgba(255, 145, 144, 0.4), transparent 50%),
+        #040510;
+    filter: blur(0px);
+    animation: aurora 25s ease-in-out infinite;
+    z-index: 0;
+}
+
+@keyframes aurora {
+    0% { transform: scale(1) translate(0, 0); }
+    50% { transform: scale(1.05) translate(-2%, -1%); }
+    100% { transform: scale(1) translate(0, 0); }
+}
+
+.effects-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+}
+
+.particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 1), rgba(91, 124, 250, 0.4));
+    opacity: 0;
+    animation: sparkle 900ms ease-out forwards;
+    --dx: 0px;
+    --dy: -60px;
+    pointer-events: none;
+}
+
+.particle::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    opacity: 0.5;
+}
+
+@keyframes sparkle {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+    35% { opacity: 1; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0); }
+}
+
+.particle.success {
+    background: radial-gradient(circle, rgba(255, 255, 255, 1), rgba(145, 255, 196, 0.7));
+}
+
+.particle.error {
+    background: radial-gradient(circle, rgba(255, 255, 255, 1), rgba(255, 132, 149, 0.9));
+}
+
+.overlay-message {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1.2rem, 2vw, 2.5rem);
+    font-weight: 600;
+    color: #ffffff;
+    pointer-events: none;
+    text-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    z-index: 6;
+}
+
+.overlay-message.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.overlay-error {
+    color: #ff8495;
+}
+
+.hidden {
+    display: none;
+}
+
+.board.shake {
+    animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+    100% { transform: translateX(0); }
 }

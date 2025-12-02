@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tours d'Hanoï</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="animated-bg"></div>
     <main class="page">
         <section class="panel">
             <h1>Tours d'Hanoï</h1>
@@ -30,6 +34,9 @@
                 <span class="tower-label">Tour C</span>
                 <div class="peg"></div>
             </div>
+            <div class="effects-layer" id="effects-layer" aria-hidden="true"></div>
+            <div class="overlay-message hidden" id="win-overlay" role="alert">Bravo ! 🎉</div>
+            <div class="overlay-message overlay-error hidden" id="error-overlay" role="alert">Mouvement interdit</div>
         </section>
     </main>
     <script src="app.js"></script>
