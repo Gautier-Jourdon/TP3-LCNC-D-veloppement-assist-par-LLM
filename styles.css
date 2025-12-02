@@ -117,14 +117,20 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: grab;
+    cursor: default;
     user-select: none;
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.ring:active {
-    cursor: grabbing;
-    transform: translateY(-6px);
+.ring-selectable {
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.ring-selected {
+    outline: 4px solid rgba(91, 124, 250, 0.8);
+    outline-offset: 3px;
+    transform: translateY(-4px);
 }
 
 .ring[data-size="1"] { width: 90px; background: #ff8a65; }

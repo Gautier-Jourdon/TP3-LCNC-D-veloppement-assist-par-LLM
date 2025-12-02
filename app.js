@@ -6,7 +6,8 @@ const towerEls = Array.from(document.querySelectorAll(".tower"));
 let towerState = [[], [], []];
 let totalRings = 4;
 let gameActive = false;
-let dragData = null;
+let selectedRing = null;
+let selectedRingEl = null;
 
 startBtn.addEventListener("click", () => {
     const desiredCount = Number(ringInput.value);
@@ -16,28 +17,11 @@ startBtn.addEventListener("click", () => {
     }
     totalRings = desiredCount;
     resetBoard();
-    statusEl.textContent = "Déplacez les anneaux en respectant les règles : un seul anneau à la fois et jamais un grand sur un petit.";
+    statusEl.textContent = "Sélectionnez un anneau (toujours le sommet d'une tour) puis cliquez sur la tour d'arrivée. Un seul anneau à la fois et jamais un grand sur un petit.";
 });
 
 towerEls.forEach((tower) => {
-    tower.addEventListener("dragover", (event) => {
-        if (!gameActive || !dragData) return;
-        if (isDropAllowed(Number(tower.dataset.index))) {
-            event.preventDefault();
-        }
-    });
-
-    tower.addEventListener("drop", (event) => {
-        event.preventDefault();
-        if (!gameActive || !dragData) return;
-        const targetIndex = Number(tower.dataset.index);
-        if (!isDropAllowed(targetIndex)) {
-            statusEl.textContent = "Impossible : un anneau plus grand ne peut pas être posé sur un plus petit.";
-            return;
-        }
-        moveRing(dragData.from, targetIndex);
-        dragData = null;
-    });
+    tower.addEventListener("click", () => handleTowerClick(Number(tower.dataset.index)));
 });
 
 function resetBoard() {
@@ -46,6 +30,7 @@ function resetBoard() {
         towerState[0].push(size);
     }
     gameActive = true;
+    clearSelection();
     render();
 }
 
@@ -60,18 +45,16 @@ function render() {
             ring.textContent = size;
             ring.style.bottom = `${40 + pos * 30}px`;
             const isTopRing = pos === stack.length - 1;
-            ring.draggable = gameActive && isTopRing;
-            if (ring.draggable) {
-                ring.addEventListener("dragstart", (event) => {
-                    dragData = { from: index, size };
-                    if (event.dataTransfer) {
-                        event.dataTransfer.setData("text/plain", String(size));
-                        event.dataTransfer.effectAllowed = "move";
-                    }
+            ring.classList.toggle("ring-selectable", gameActive && isTopRing);
+            if (gameActive && isTopRing) {
+                ring.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    handleRingSelection(index, size, ring);
                 });
-                ring.addEventListener("dragend", () => {
-                    dragData = null;
-                });
+            }
+            if (selectedRing && selectedRing.from === index && selectedRing.size === size) {
+                ring.classList.add("ring-selected");
+                selectedRingEl = ring;
             }
             towerEl.appendChild(ring);
         });
@@ -80,11 +63,11 @@ function render() {
 }
 
 function isDropAllowed(targetIndex) {
-    if (!dragData) return false;
-    if (targetIndex === dragData.from) return false;
+    if (!selectedRing) return false;
+    if (targetIndex === selectedRing.from) return false;
     const targetStack = towerState[targetIndex];
     const topTarget = targetStack[targetStack.length - 1];
-    return topTarget === undefined || dragData.size < topTarget;
+    return topTarget === undefined || selectedRing.size < topTarget;
 }
 
 function moveRing(fromIndex, toIndex) {
@@ -93,6 +76,7 @@ function moveRing(fromIndex, toIndex) {
     if (!sourceStack.length) return;
     targetStack.push(sourceStack.pop());
     statusEl.textContent = `Déplacement : Tour ${String.fromCharCode(65 + fromIndex)} → Tour ${String.fromCharCode(65 + toIndex)}.`;
+    clearSelection();
     render();
 }
 
@@ -101,6 +85,45 @@ function checkForWin() {
         gameActive = false;
         statusEl.textContent = "Bravo ! Vous avez résolu les tours d'Hanoï. Cliquez sur \"Démarrer\" pour rejouer.";
     }
+}
+
+function handleRingSelection(fromIndex, size, ringEl) {
+    if (!gameActive) return;
+    if (selectedRing && selectedRing.from === fromIndex && selectedRing.size === size) {
+        clearSelection();
+        statusEl.textContent = "Sélection annulée. Choisissez un anneau à déplacer.";
+        return;
+    }
+    clearSelection();
+    selectedRing = { from: fromIndex, size };
+    selectedRingEl = ringEl;
+    ringEl.classList.add("ring-selected");
+    statusEl.textContent = `Anneau ${size} sélectionné sur la tour ${String.fromCharCode(65 + fromIndex)}. Choisissez la tour d'arrivée.`;
+}
+
+function handleTowerClick(targetIndex) {
+    if (!gameActive) return;
+    if (!selectedRing) {
+        statusEl.textContent = "Sélectionnez d'abord un anneau sur la tour de départ.";
+        return;
+    }
+    if (selectedRing.from === targetIndex) {
+        statusEl.textContent = "Choisissez une tour différente pour effectuer le déplacement.";
+        return;
+    }
+    if (!isDropAllowed(targetIndex)) {
+        statusEl.textContent = "Impossible : un anneau plus grand ne peut pas être posé sur un plus petit.";
+        return;
+    }
+    moveRing(selectedRing.from, targetIndex);
+}
+
+function clearSelection() {
+    if (selectedRingEl) {
+        selectedRingEl.classList.remove("ring-selected");
+    }
+    selectedRing = null;
+    selectedRingEl = null;
 }
 
 // Initial rendering so the layout is not empty on load.
