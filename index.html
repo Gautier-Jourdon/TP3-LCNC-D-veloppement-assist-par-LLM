@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tours d'Hanoï</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="page">
+        <section class="panel">
+            <h1>Tours d'Hanoï</h1>
+            <div class="controls">
+                <label for="ring-count">Nombre d'anneaux</label>
+                <input id="ring-count" type="number" min="3" max="8" value="4">
+                <button id="start-btn">Démarrer</button>
+            </div>
+            <p id="status" class="status">Choisissez un nombre d'anneaux puis cliquez sur «&nbsp;Démarrer&nbsp;».</p>
+        </section>
+        <section class="board" aria-live="polite">
+            <div class="tower" data-index="0" tabindex="0">
+                <span class="tower-label">Tour A</span>
+                <div class="peg"></div>
+            </div>
+            <div class="tower" data-index="1" tabindex="0">
+                <span class="tower-label">Tour B</span>
+                <div class="peg"></div>
+            </div>
+            <div class="tower" data-index="2" tabindex="0">
+                <span class="tower-label">Tour C</span>
+                <div class="peg"></div>
+            </div>
+        </section>
+    </main>
+    <script src="app.js"></script>
+</body>
+</html>
