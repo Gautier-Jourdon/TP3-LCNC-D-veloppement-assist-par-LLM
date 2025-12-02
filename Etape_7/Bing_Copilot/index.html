@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tours d’Hanoï — HTML/CSS/JS pur</title>
+  <!-- Police attractive -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg1: #0d1b2a;
+      --bg2: #1b263b;
+      --bg3: #2b3a55;
+      --panel: #102a43;
+      --text: #e0e6ed;
+      --accent: #4cc9f0;
+      --accent-2: #64dfdf;
+      --accent-3: #c0f5ff;
+      --ring: #2f80ed;
+      --ring-2: #56ccf2;
+      --ring-3: #90e0ef;
+      --error: #ff4d6d;
+      --success: #2bd39a;
+      --shadow: rgba(0,0,0,0.35);
+      --glow: 0 0 30px rgba(76,201,240,0.35), 0 0 60px rgba(76,201,240,0.15);
+      --speed: 250ms;
+    }
+    /* Thème clair animé */
+    :root.light {
+      --bg1: #dff6ff;
+      --bg2: #cbeaff;
+      --bg3: #b7ddff;
+      --panel: #ffffffec;
+      --text: #12263a;
+      --accent: #2471a3;
+      --accent-2: #1f78d1;
+      --accent-3: #0ea5e9;
+      --ring: #2378ff;
+      --ring-2: #57a7ff;
+      --ring-3: #8fc2ff;
+      --shadow: rgba(0,0,0,0.15);
+      --glow: 0 0 20px rgba(36,113,163,0.35), 0 0 40px rgba(36,113,163,0.15);
+    }
+
+    * { box-sizing: border-box }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      color: var(--text);
+      background: radial-gradient(1000px 600px at 10% 20%, var(--bg3), transparent) no-repeat,
+                  radial-gradient(1000px 600px at 90% 80%, var(--bg2), transparent) no-repeat,
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow: hidden;
+    }
+
+    /* Background animé — particules */
+    canvas#bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px rgba(76,201,240,.35));
+    }
+
+    /* Layout */
+    .app {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+      padding: 24px;
+      min-height: 100%;
+    }
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; padding: 16px; }
+    }
+
+    /* Panneau contrôle */
+    .control-panel {
+      background: var(--panel);
+      border-radius: 16px;
+      box-shadow: 0 12px 36px var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .control-panel::after {
+      content: "";
+      position: absolute;
+      right: -40px; top: -40px;
+      width: 180px; height: 180px;
+      background: conic-gradient(from 180deg at 50% 50%, transparent 0 60%, rgba(76,201,240,0.18) 60% 100%);
+      filter: blur(12px);
+    }
+    .title {
+      font-weight: 600;
+      font-size: 20px;
+      letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .subtitle {
+      font-weight: 400;
+      font-size: 13px;
+      opacity: 0.85;
+      margin-top: -6px;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+    .field label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .input {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: end;
+    }
+    input[type="number"] {
+      width: 92px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      transition: border var(--speed), transform var(--speed);
+      font-family: JetBrains Mono, monospace;
+      font-size: 14px;
+    }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: var(--glow);
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: linear-gradient(180deg, var(--accent-2), var(--accent));
+      color: white;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+      cursor: pointer;
+      transition: transform var(--speed), filter var(--speed), box-shadow var(--speed);
+      display: inline-flex; align-items: center; gap: 10px; justify-content: center;
+    }
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    .btn:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+
+    .btn.secondary {
+      background: linear-gradient(180deg, #5b708b, #42566d);
+    }
+    .btn.ghost {
+      background: rgba(255,255,255,0.12);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: none;
+    }
+    .btn.robot::before {
+      content: "🤖";
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.15));
+    }
+    .btn.theme::before {
+      content: "🌗";
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .stat {
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: center;
+      font-family: JetBrains Mono, monospace;
+    }
+    .stat .label { font-size: 12px; opacity: 0.8; }
+    .stat .value { font-size: 16px; font-weight: 600; }
+
+    /* Tableau meilleurs scores */
+    .scores {
+      margin-top: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 12px;
+      font-family: JetBrains Mono, monospace;
+    }
+    .scores h4 {
+      margin: 0 0 8px 0;
+      font-weight: 600; font-size: 14px;
+    }
+    .score-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+    }
+    .score-row:nth-child(odd) { background: rgba(255,255,255,0.06); }
+    .score-min { opacity: 0.7; font-size: 12px; }
+    .score-best { font-weight: 600; }
+
+    /* Plateau */
+    .board-wrap {
+      position: relative;
+      background: rgba(255,255,255,0.06);
+      border-radius: 16px;
+      box-shadow: 0 12px 36px var(--shadow);
+      padding: 20px;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+    }
+    .board-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .board-title { font-size: 20px; font-weight: 600; letter-spacing: .3px; }
+    .legend { font-size: 12px; opacity: .8; }
+
+    .board {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      align-items: end;
+      padding: 10px;
+      position: relative;
+    }
+
+    .tower {
+      position: relative;
+      height: 380px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.25);
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      padding: 12px;
+      cursor: pointer;
+      transition: transform var(--speed), box-shadow var(--speed), border var(--speed);
+    }
+    .tower:hover {
+      transform: translateY(-2px);
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.2), 0 8px 18px rgba(0,0,0,0.25);
+      border-color: var(--accent);
+    }
+    .peg {
+      position: absolute;
+      bottom: 60px; left: 50%;
+      transform: translateX(-50%);
+      width: 14px; height: 260px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #324968, #1f334b);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.35), inset 0 0 10px rgba(255,255,255,0.08);
+    }
+    .base {
+      position: absolute;
+      bottom: 24px;
+      left: 12px; right: 12px;
+      height: 30px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #1f334b, #0f1d31);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    }
+
+    .rings {
+      position: absolute;
+      bottom: 62px;
+      left: 0; right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding-bottom: 6px;
+      pointer-events: none;
+    }
+
+    .ring {
+      position: relative;
+      height: 28px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, var(--ring-2), var(--ring));
+      box-shadow: 0 8px 22px rgba(0,0,0,0.35), inset 0 0 12px rgba(255,255,255,0.15);
+      transition: transform 420ms cubic-bezier(.2,.8,.2,1), left 420ms cubic-bezier(.2,.8,.2,1), top 420ms cubic-bezier(.2,.8,.2,1);
+      width: 60%;
+      pointer-events: auto;
+    }
+    .ring[data-size="1"] { width: 32%; background: linear-gradient(180deg, var(--ring-3), var(--ring-2)); }
+    .ring[data-size="2"] { width: 40%; }
+    .ring[data-size="3"] { width: 48%; }
+    .ring[data-size="4"] { width: 56%; }
+    .ring[data-size="5"] { width: 64%; }
+    .ring[data-size="6"] { width: 72%; }
+    .ring[data-size="7"] { width: 80%; }
+    .ring[data-size="8"] { width: 88%; }
+    .ring[data-size="9"] { width: 94%; }
+    .ring[data-size="10"] { width: 98%; }
+
+    /* Sélection: étoile pulsante */
+    .ring.selected {
+      outline: 2px solid var(--accent-3);
+      filter: drop-shadow(0 0 6px rgba(12,165,233,0.55));
+      animation: starPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes starPulse {
+      0%, 100% { box-shadow: 0 0 0px rgba(12,165,233,0.0), inset 0 0 12px rgba(255,255,255,0.12); }
+      50% { box-shadow: 0 0 18px rgba(12,165,233,0.55), inset 0 0 18px rgba(255,255,255,0.18); }
+    }
+    .ring::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 16px;
+      background: radial-gradient(18px 8px at 12% 35%, rgba(255,255,255,.45), transparent),
+                  radial-gradient(12px 6px at 86% 65%, rgba(255,255,255,.35), transparent);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    /* Particules ring movement */
+    .ring.move-particles::before {
+      content: "";
+      position: absolute;
+      left: 50%; top: -18px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent-3);
+      filter: drop-shadow(0 0 6px rgba(12,165,233,0.65));
+      animation: particleBurst 600ms ease-out 1;
+    }
+    @keyframes particleBurst {
+      0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -26px) scale(2.6); opacity: 0; }
+    }
+
+    /* Overlay erreur */
+    .error-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: none;
+    }
+    .error-overlay.show {
+      display: block;
+      background: radial-gradient(300px 200px at center, rgba(255,77,109,0.20), transparent);
+      animation: errorFlash 600ms ease-out 1;
+    }
+    @keyframes errorFlash {
+      0% { background: radial-gradient(300px 200px at center, rgba(255,77,109,0.35), transparent); }
+      100% { background: radial-gradient(300px 200px at center, rgba(255,77,109,0.0), transparent); }
+    }
+
+    /* Animation victoire */
+    .victory {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: none;
+    }
+    .victory.show {
+      display: block;
+    }
+    .victory .burst {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 0; height: 0;
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(43,211,154,0.45);
+      animation: victoryBurst 1200ms ease-out forwards;
+    }
+    @keyframes victoryBurst {
+      0% { box-shadow: 0 0 0 0 rgba(43,211,154,0.45); opacity: 1; }
+      100% { box-shadow: 0 0 0 240px rgba(43,211,154,0.0); opacity: 0; }
+    }
+
+    /* Modal final */
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(3px);
+    }
+    .modal.show { display: flex; }
+    .modal-card {
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 20px;
+      width: min(520px, 92vw);
+      box-shadow: 0 12px 36px var(--shadow);
+      text-align: center;
+    }
+    .modal-card h3 {
+      margin-top: 0;
+      font-size: 22px; letter-spacing: .3px;
+    }
+    .modal-card p { opacity: 0.85; }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    /* Thème toggle badge */
+    .theme-toggle {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      cursor: pointer;
+      transition: transform var(--speed);
+    }
+    .theme-toggle:hover { transform: translateY(-1px); }
+    .toggle-dot {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: radial-gradient(10px 10px at 40% 40%, #fff, #ddd);
+      box-shadow: 0 0 8px rgba(255,255,255,0.25);
+      position: relative;
+      overflow: hidden;
+    }
+    :root.light .toggle-dot {
+      background: radial-gradient(10px 10px at 40% 40%, #ffd, #ffe);
+      box-shadow: 0 0 8px rgba(255,225,120,0.35);
+    }
+    .toggle-dot::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(16px 16px at 70% 30%, rgba(0,0,0,0.55), transparent);
+      transform: translateX(0);
+      transition: transform var(--speed);
+    }
+    :root.light .toggle-dot::after { transform: translateX(100%); }
+
+    /* Footer */
+    .footer {
+      margin-top: 10px;
+      font-size: 12px;
+      opacity: 0.75;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Responsiveness tweaks */
+    @media (max-width: 640px) {
+      .tower { height: 320px; }
+      .peg { height: 220px; bottom: 54px; }
+      .base { height: 28px; }
+      .ring { height: 24px; }
+      .board-wrap { min-height: 460px; }
+    }
+
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="app">
+    <aside class="control-panel">
+      <div class="title">Tours d’Hanoï</div>
+      <div class="subtitle">HTML/CSS/JS pur — animations, démo auto, scores persistants</div>
+
+      <div class="field">
+        <label for="ringCount"><strong>Anneaux:</strong> choisissez entre 3 et 10</label>
+        <div class="input">
+          <input id="ringCount" type="number" min="3" max="10" step="1" value="4" />
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button id="startBtn" class="btn">Démarrer</button>
+        <button id="resetBtn" class="btn secondary">Reset</button>
+      </div>
+      <div class="buttons">
+        <button id="demoBtn" class="btn robot">Démo</button>
+        <button id="themeBtn" class="btn ghost theme">Thème</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Coups joueur</div>
+          <div id="playerMoves" class="value">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Coups démo</div>
+          <div id="demoMoves" class="value">0</div>
+        </div>
+      </div>
+
+      <div class="scores">
+        <h4>Meilleurs scores</h4>
+        <div id="scoresList"></div>
+      </div>
+
+      <div class="footer">
+        <div>Minimum théorique: <span id="minMoves">0</span> coups</div>
+        <div class="theme-toggle" id="themeToggle">
+          <div class="toggle-dot"></div>
+          <div>Mode clair</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="board-wrap">
+      <div class="board-header">
+        <div class="board-title">Plateau</div>
+        <div class="legend">Sélectionnez un anneau, puis une tour cible</div>
+      </div>
+
+      <div class="board" id="board">
+        <!-- Tours -->
+        <div class="tower" data-index="0">
+          <div class="peg"></div>
+          <div class="base"></div>
+          <div class="rings"></div>
+        </div>
+        <div class="tower" data-index="1">
+          <div class="peg"></div>
+          <div class="base"></div>
+          <div class="rings"></div>
+        </div>
+        <div class="tower" data-index="2">
+          <div class="peg"></div>
+          <div class="base"></div>
+          <div class="rings"></div>
+        </div>
+
+        <div class="error-overlay" id="errorOverlay"></div>
+        <div class="victory" id="victory"><div class="burst"></div></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal final démo -->
+  <div class="modal" id="finalModal">
+    <div class="modal-card">
+      <h3>Prêt à jouer ?</h3>
+      <p>La démo est terminée. À vous de déplacer les anneaux et battre le meilleur score.</p>
+      <div class="modal-actions">
+        <button id="modalStart" class="btn">Démarrer</button>
+        <button id="modalBack" class="btn secondary">Retour</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ----- Utilitaires -----
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+    const state = {
+      started: false,
+      demoRunning: false,
+      ringCount: 4,
+      towers: [[], [], []], // piles de tailles (plus petit nombre = anneau le plus petit)
+      selectedRing: null,
+      playerMoves: 0,
+      demoMoves: 0,
+      scores: {}, // { n: bestMoves }
+    };
+
+    const LS_KEY = "hanoi_scores_v1";
+
+    // Chargement scores
+    function loadScores() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (raw) state.scores = JSON.parse(raw);
+      } catch {}
+    }
+    function saveScores() {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(state.scores));
+      } catch {}
+    }
+    function minTheoretical(n) {
+      return Math.pow(2, n) - 1;
+    }
+
+    // ----- Background particules animées -----
+    const bgCanvas = document.getElementById('bg-canvas');
+    const ctx = bgCanvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      bgCanvas.width = window.innerWidth;
+      bgCanvas.height = window.innerHeight;
+      initParticles();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function initParticles() {
+      const count = Math.min(140, Math.floor((bgCanvas.width * bgCanvas.height) / 28000));
+      particles = Array.from({ length: count }, () => ({
+        x: Math.random() * bgCanvas.width,
+        y: Math.random() * bgCanvas.height,
+        r: Math.random() * 2 + 0.5,
+        s: Math.random() * 0.6 + 0.2,
+        hue: 190 + Math.random() * 40,
+      }));
+    }
+    function tickParticles() {
+      ctx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+      for (const p of particles) {
+        p.y += p.s;
+        p.x += Math.sin(p.y * 0.01) * 0.3;
+        if (p.y > bgCanvas.height + 10) p.y = -10;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue}, 70%, 60%, 0.18)`;
+        ctx.fill();
+      }
+      requestAnimationFrame(tickParticles);
+    }
+    resizeCanvas();
+    tickParticles();
+
+    // ----- Plateau et UI -----
+    const towersEl = $$('#board .tower');
+    const ringsContainers = towersEl.map(t => t.querySelector('.rings'));
+    const errorOverlay = $('#errorOverlay');
+    const victoryEl = $('#victory');
+
+    const ringCountInput = $('#ringCount');
+    const startBtn = $('#startBtn');
+    const resetBtn = $('#resetBtn');
+    const demoBtn = $('#demoBtn');
+
+    const playerMovesEl = $('#playerMoves');
+    const demoMovesEl = $('#demoMoves');
+    const scoresListEl = $('#scoresList');
+    const minMovesEl = $('#minMoves');
+
+    const themeBtn = $('#themeBtn');
+    const themeToggle = $('#themeToggle');
+    const modal = $('#finalModal');
+    const modalStart = $('#modalStart');
+    const modalBack = $('#modalBack');
+
+    // Thème
+    function setTheme(light) {
+      document.documentElement.classList.toggle('light', !!light);
+    }
+    themeBtn.addEventListener('click', () => {
+      const isLight = document.documentElement.classList.contains('light');
+      setTheme(!isLight);
+    });
+    themeToggle.addEventListener('click', () => {
+      const isLight = document.documentElement.classList.contains('light');
+      setTheme(!isLight);
+    });
+
+    // Scores UI
+    function renderScores() {
+      const entries = Object.entries(state.scores)
+        .map(([n, best]) => ({ n: Number(n), best }))
+        .sort((a,b) => a.n - b.n);
+      scoresListEl.innerHTML = entries.length ? entries.map(e => `
+        <div class="score-row">
+          <div><strong>Anneaux:</strong> ${e.n}</div>
+          <div class="score-min"><strong>Min:</strong> ${minTheoretical(e.n)}</div>
+          <div class="score-best"><strong>Best:</strong> ${e.best}</div>
+        </div>
+      `).join('') : `<div class="score-row"><div>—</div><div class="score-min">Commencez une partie</div><div class="score-best">—</div></div>`;
+    }
+
+    // Initialisation plateau
+    function initBoard(n) {
+      state.towers = [[], [], []];
+      for (let size = n; size >= 1; size--) {
+        state.towers[0].push(size);
+      }
+      state.selectedRing = null;
+      victoryEl.classList.remove('show');
+      renderBoard();
+      updateCounters();
+      minMovesEl.textContent = minTheoretical(n);
+    }
+
+    // Rendu des anneaux
+    function renderBoard() {
+      ringsContainers.forEach(c => c.innerHTML = '');
+      for (let i = 0; i < 3; i++) {
+        const stack = state.towers[i];
+        stack.forEach((size, idx) => {
+          const ring = document.createElement('div');
+          ring.className = 'ring';
+          ring.setAttribute('data-size', size);
+          ring.style.zIndex = 100 + (stack.length - idx);
+          // attacher événements seulement au sommet
+          if (idx === stack.length - 1 && !state.demoRunning) {
+            ring.addEventListener('click', ev => {
+              ev.stopPropagation();
+              onRingClick(i);
+            });
+          }
+          ringsContainers[i].appendChild(ring);
+        });
+      }
+      // attaches towers click
+      towersEl.forEach(t => {
+        t.onclick = () => onTowerClick(Number(t.dataset.index));
+      });
+      // Maintenir sélection visuelle
+      if (state.selectedRing) {
+        const [fromIdx, size] = state.selectedRing;
+        const container = ringsContainers[fromIdx];
+        const rings = container.querySelectorAll('.ring');
+        if (rings.length) rings[rings.length - 1].classList.add('selected');
+      }
+    }
+
+    function updateCounters() {
+      playerMovesEl.textContent = state.playerMoves;
+      demoMovesEl.textContent = state.demoMoves;
+    }
+
+    // Sélection anneau
+    function onRingClick(towerIndex) {
+      if (!state.started || state.demoRunning) return;
+      const stack = state.towers[towerIndex];
+      if (!stack.length) return;
+      const size = stack[stack.length - 1];
+      // toggle sélection
+      if (state.selectedRing && state.selectedRing[0] === towerIndex) {
+        state.selectedRing = null;
+      } else {
+        state.selectedRing = [towerIndex, size];
+      }
+      renderBoard();
+    }
+
+    // Clic tour cible
+    function onTowerClick(targetIndex) {
+      if (!state.started || state.demoRunning) return;
+      if (!state.selectedRing) return;
+      const [fromIndex, size] = state.selectedRing;
+      if (fromIndex === targetIndex) {
+        // Rien à faire
+        state.selectedRing = null;
+        renderBoard();
+        return;
+      }
+      // Vérification règle
+      const targetStack = state.towers[targetIndex];
+      if (targetStack.length && targetStack[targetStack.length - 1] < size) {
+        feedbackError();
+        return;
+      }
+      // Déplacement
+      moveRing(fromIndex, targetIndex, true);
+      state.selectedRing = null;
+      checkWin();
+    }
+
+    // Feedback erreur
+    let errorTimeout = null;
+    function feedbackError() {
+      clearTimeout(errorTimeout);
+      errorOverlay.classList.add('show');
+      errorTimeout = setTimeout(() => {
+        errorOverlay.classList.remove('show');
+      }, 600);
+    }
+
+    // Déplacement avec animation fluide
+    function moveRing(from, to, countForPlayer=false) {
+      const movedSize = state.towers[from].pop();
+      state.towers[to].push(movedSize);
+      state.demoRunning ? state.demoMoves++ : (countForPlayer ? state.playerMoves++ : null);
+      // marquer particules sur le ring sommet cible
+      renderBoard();
+      const rings = ringsContainers[to].querySelectorAll('.ring');
+      if (rings.length) {
+        const top = rings[rings.length - 1];
+        top.classList.add('move-particles');
+        setTimeout(() => top.classList.remove('move-particles'), 700);
+      }
+      updateCounters();
+    }
+
+    // Vérifier victoire
+    function checkWin() {
+      if (state.towers[2].length === state.ringCount) {
+        // animation victoire
+        victoryEl.classList.add('show');
+        victoryEl.querySelector('.burst').style.animation = 'none';
+        void victoryEl.querySelector('.burst').offsetWidth;
+        victoryEl.querySelector('.burst').style.animation = null;
+
+        // enregistrer meilleur score
+        const n = state.ringCount;
+        const current = state.playerMoves;
+        const best = state.scores[n];
+        if (!best || current < best) {
+          state.scores[n] = current;
+          saveScores();
+          renderScores();
+        }
+        // Terminer partie user
+        state.started = false;
+      }
+    }
+
+    // Bouton Démarrer (pas de reset implicite)
+    startBtn.addEventListener('click', () => {
+      const n = clampRingCount();
+      if (!state.started) {
+        state.ringCount = n;
+        state.playerMoves = 0;
+        state.demoMoves = 0;
+        initBoard(n);
+        state.started = true;
+      } else {
+        // déjà démarré, ne pas reset implicitement: proposer sélection anneau puis jouer
+        // feedback léger
+        pulseButton(startBtn);
+      }
+    });
+
+    // Reset séparé
+    resetBtn.addEventListener('click', () => {
+      const n = clampRingCount();
+      state.ringCount = n;
+      state.playerMoves = 0;
+      state.demoMoves = 0;
+      state.started = false;
+      state.demoRunning = false;
+      state.selectedRing = null;
+      initBoard(n);
+    });
+
+    // Démo auto (icône robot), respecte 2s
+    demoBtn.addEventListener('click', async () => {
+      const n = clampRingCount();
+      // Adapter le nombre d’anneaux: si non démarré ou ringCount différent, initialiser
+      if (!state.started || state.ringCount !== n) {
+        state.ringCount = n;
+        state.playerMoves = 0;
+        state.demoMoves = 0;
+        initBoard(n);
+        state.started = true;
+      }
+      if (state.demoRunning) return;
+      state.demoRunning = true;
+      state.selectedRing = null;
+      renderBoard();
+
+      // Résolution récursive en liste de mouvements
+      const moves = [];
+      solveHanoi(n, 0, 2, 1, moves);
+      // Exécuter avec 2s d’intervalle
+      for (let i = 0; i < moves.length; i++) {
+        const [from, to] = moves[i];
+        await wait(2000);
+        moveRing(from, to, false);
+      }
+      // Fin démo => modal
+      state.demoRunning = false;
+      showFinalModal();
+    });
+
+    // Modal actions
+    modalStart.addEventListener('click', () => {
+      hideFinalModal();
+      // Démarrer partie avec la même configuration (anneaux déjà sur tour 3)
+      // On remet le plateau initial pour que le joueur joue lui-même.
+      const n = state.ringCount;
+      state.playerMoves = 0;
+      state.demoMoves = 0;
+      initBoard(n);
+      state.started = true;
+    });
+    modalBack.addEventListener('click', () => {
+      hideFinalModal();
+      // Retour: ne démarre pas, laisse le plateau tel quel
+    });
+
+    function showFinalModal() { modal.classList.add('show'); }
+    function hideFinalModal() { modal.classList.remove('show'); }
+
+    // Solveur Hanoï — produit la séquence de mouvements
+    function solveHanoi(n, from, to, aux, out) {
+      if (n === 0) return;
+      solveHanoi(n - 1, from, aux, to, out);
+      out.push([from, to]);
+      solveHanoi(n - 1, aux, to, from, out);
+    }
+
+    // Helpers
+    function clampRingCount() {
+      const v = Number(ringCountInput.value || 4);
+      const n = Math.max(3, Math.min(10, v));
+      ringCountInput.value = n;
+      return n;
+    }
+    function wait(ms) { return new Promise(res => setTimeout(res, ms)); }
+    function pulseButton(btn) {
+      btn.style.transform = 'translateY(-2px) scale(1.02)';
+      setTimeout(() => btn.style.transform = '', 220);
+    }
+
+    // Démarrage
+    loadScores();
+    renderScores();
+    const initialN = clampRingCount();
+    state.ringCount = initialN;
+    initBoard(initialN);
+
+  </script>
+</body>
+</html>

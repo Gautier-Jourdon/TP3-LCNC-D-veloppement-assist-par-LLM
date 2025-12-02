@@ -1,15 +1,10 @@
 # TP3-LCNC-D-veloppement-assist-par-LLM
-TP3 sur le low-oce no-code (M1 ILSEN) - Développement assisté par LLM
+TP3 low-code/no-code (M1 ILSEN) avec développement assisté par LLM.
 
-Le LLM apporte un gain de temps conséquent et non négligeable.
-Mes prompts ont été clairs et concis ce qui m'a fait gagner beaucoup
-de temps.
-
-Le code est propre et va droit au but, seulement, il utilise des méthodes
-que je n'aurais pas utilisé en JavaScript surtout.
-
-Ma méthode de prompting s'adapte en fonction des LLMs car je constate une réelle
-différence d'interprétation entre chacun.
-
-Mais il est vrai que les LLMs peuvent facilement faire des erreurs, surtout si le
-prompt n'est pas assez précis, ça reste un outil qui ne pense pas à notre place.
+Le LLM me fait gagner un temps précieux sur chaque itération.
+Je garde des prompts courts et clairs.
+Le code généré est propre, même si certaines astuces JS ne seraient pas mes réflexes.
+Tant que ça reste lisible et maintenable, je prends.
+J’ajuste mes demandes selon le modèle, chacun comprend différemment.
+Si le prompt est flou, je rencontre vite des erreurs.
+Au final, ça reste un outil qui ne pense pas à notre place.

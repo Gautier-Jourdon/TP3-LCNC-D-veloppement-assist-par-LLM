@@ -1,0 +1,7 @@
+Créer un jeu web complet des Tours d’Hanoï en pur HTML/CSS/JS (pas de framework). 
+Le joueur choisit le nombre d’anneaux et clique sur “Démarrer” pour lancer (pas de reset implicite). 
+Bouton Reset séparé pour remettre à zéro. 
+Interaction : sélection d’un anneau (avec animation étoilée) puis clic sur la tour cible, règles strictes (pas d’anneau plus grand sur un plus petit) avec feedback animé d’échec. 
+Ajoute aussi un mode “Démo” (bouton avec icône robot) qui résout automatiquement, adapte le nombre d’anneaux, applique les mêmes animations, respecte 2 s entre chaque déplacement, affiche un compteur de coups, et montre un modal final “Prêt à jouer ?” avec boutons “Démarrer” et “Retour”. 
+Intègre un compteur de coups pour le joueur et pour la démo, plus un tableau des meilleurs scores (avec minimum théorique) persistant via localStorage. 
+UI : background animé, thème principal bleu foncé + mode thème clair bleu clair (toggle animé), menu de contrôle interactif, anneaux avec animation de déplacement fluide, effets particules, animation victoire, overlay erreur, et design moderne responsive avec font attractive.
