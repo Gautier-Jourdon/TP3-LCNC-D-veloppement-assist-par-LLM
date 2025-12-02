@@ -18,6 +18,10 @@
                 <label for="ring-count">Nombre d'anneaux</label>
                 <input id="ring-count" type="number" min="3" max="8" value="4">
                 <button id="start-btn">Démarrer</button>
+                <button id="demo-btn" class="demo-btn" type="button">
+                    <span class="icon" aria-hidden="true">🤖</span>
+                    <span>Démo</span>
+                </button>
             </div>
             <p id="status" class="status">Choisissez un nombre d'anneaux puis cliquez sur «&nbsp;Démarrer&nbsp;».</p>
         </section>
@@ -39,6 +43,17 @@
             <div class="overlay-message overlay-error hidden" id="error-overlay" role="alert">Mouvement interdit</div>
         </section>
     </main>
+    <div class="modal hidden" id="demo-modal" role="dialog" aria-modal="true" aria-labelledby="demo-modal-title">
+        <div class="modal-backdrop"></div>
+        <div class="modal-dialog">
+            <h2 id="demo-modal-title">Prêt à jouer ?</h2>
+            <p>La démonstration est terminée. Souhaitez-vous prendre la main et résoudre les tours vous-même ?</p>
+            <div class="modal-actions">
+                <button id="modal-start-btn" class="primary">Démarrer</button>
+                <button id="modal-close-btn" class="ghost">Retour</button>
+            </div>
+        </div>
+    </div>
     <script src="app.js"></script>
 </body>
 </html>

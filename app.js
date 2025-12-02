@@ -1,11 +1,15 @@
 const ringInput = document.getElementById("ring-count");
 const startBtn = document.getElementById("start-btn");
+const demoBtn = document.getElementById("demo-btn");
 const statusEl = document.getElementById("status");
 const towerEls = Array.from(document.querySelectorAll(".tower"));
 const boardEl = document.querySelector(".board");
 const effectsLayer = document.getElementById("effects-layer");
 const winOverlay = document.getElementById("win-overlay");
 const errorOverlay = document.getElementById("error-overlay");
+const demoModal = document.getElementById("demo-modal");
+const modalStartBtn = document.getElementById("modal-start-btn");
+const modalCloseBtn = document.getElementById("modal-close-btn");
 
 let towerState = [[], [], []];
 let totalRings = 4;
@@ -14,6 +18,9 @@ let selectedRing = null;
 let selectedRingEl = null;
 let lastMove = null;
 const overlayTimers = new Map();
+let demoMode = false;
+let demoMoves = [];
+let demoTimeoutId = null;
 
 startBtn.addEventListener("pointermove", (event) => {
     const rect = startBtn.getBoundingClientRect();
@@ -23,20 +30,55 @@ startBtn.addEventListener("pointermove", (event) => {
     startBtn.style.setProperty("--y", `${y}%`);
 });
 
-startBtn.addEventListener("click", () => {
-    const desiredCount = Number(ringInput.value);
-    if (Number.isNaN(desiredCount) || desiredCount < 3 || desiredCount > 8) {
-        statusEl.textContent = "Choisissez un nombre entre 3 et 8 anneaux.";
-        return;
-    }
-    totalRings = desiredCount;
-    resetBoard();
-    statusEl.textContent = "Sélectionnez un anneau (toujours le sommet d'une tour) puis cliquez sur la tour d'arrivée. Un seul anneau à la fois et jamais un grand sur un petit.";
+startBtn.addEventListener("click", startPlayerGame);
+demoBtn.addEventListener("click", startDemoMode);
+
+modalStartBtn?.addEventListener("click", () => {
+    hideDemoModal();
+    startPlayerGame();
+});
+
+modalCloseBtn?.addEventListener("click", () => {
+    hideDemoModal();
+    statusEl.textContent = "Quand vous êtes prêt·e, choisissez un nombre d'anneaux et cliquez sur \"Démarrer\".";
 });
 
 towerEls.forEach((tower) => {
     tower.addEventListener("click", () => handleTowerClick(Number(tower.dataset.index)));
 });
+
+function startPlayerGame() {
+    const desiredCount = getValidatedRingCount();
+    if (desiredCount === null) return;
+    totalRings = desiredCount;
+    stopDemoMode(true);
+    resetBoard();
+    statusEl.textContent = "Sélectionnez un anneau (toujours le sommet d'une tour) puis cliquez sur la tour d'arrivée. Un seul anneau à la fois et jamais un grand sur un petit.";
+}
+
+function startDemoMode() {
+    if (demoMode) return;
+    const desiredCount = getValidatedRingCount();
+    if (desiredCount === null) return;
+    totalRings = desiredCount;
+    stopDemoMode(true);
+    resetBoard();
+    demoMode = true;
+    setControlsDisabled(true);
+    clearSelection();
+    statusEl.textContent = "Mode démo : observez comment résoudre les tours automatiquement.";
+    demoMoves = buildDemoSequence(totalRings, 0, 2, 1);
+    scheduleNextDemoStep();
+}
+
+function getValidatedRingCount() {
+    const desiredCount = Number(ringInput.value);
+    if (Number.isNaN(desiredCount) || desiredCount < 3 || desiredCount > 8) {
+        statusEl.textContent = "Choisissez un nombre entre 3 et 8 anneaux.";
+        return null;
+    }
+    return desiredCount;
+}
 
 function resetBoard() {
     towerState = [[], [], []];
@@ -115,6 +157,10 @@ function checkForWin() {
 }
 
 function handleRingSelection(fromIndex, size, ringEl) {
+    if (demoMode) {
+        statusEl.textContent = "Mode démo en cours : patientez jusqu'à la fin de l'automatisation.";
+        return;
+    }
     if (!gameActive) return;
     if (selectedRing && selectedRing.from === fromIndex && selectedRing.size === size) {
         emitRingParticles(ringEl, { count: 10, variant: "success" });
@@ -132,6 +178,10 @@ function handleRingSelection(fromIndex, size, ringEl) {
 }
 
 function handleTowerClick(targetIndex) {
+    if (demoMode) {
+        statusEl.textContent = "Mode démo en cours : patientez jusqu'à la fin de l'automatisation.";
+        return;
+    }
     if (!gameActive) return;
     if (!selectedRing) {
         statusEl.textContent = "Sélectionnez d'abord un anneau sur la tour de départ.";
@@ -261,6 +311,74 @@ function hideOverlay(overlayEl) {
     }
     overlayEl.classList.remove("active");
     setTimeout(() => overlayEl.classList.add("hidden"), 320);
+}
+
+function buildDemoSequence(n, from, to, aux, acc = []) {
+    if (n === 1) {
+        acc.push({ from, to });
+    } else {
+        buildDemoSequence(n - 1, from, aux, to, acc);
+        acc.push({ from, to });
+        buildDemoSequence(n - 1, aux, to, from, acc);
+    }
+    return acc;
+}
+
+function scheduleNextDemoStep() {
+    if (!demoMode) return;
+    if (!demoMoves.length) {
+        completeDemoMode();
+        return;
+    }
+    const move = demoMoves.shift();
+    demoTimeoutId = setTimeout(() => {
+        if (!demoMode) return;
+        const ringSize = towerState[move.from][towerState[move.from].length - 1];
+        moveRing(move.from, move.to, ringSize);
+        scheduleNextDemoStep();
+    }, 2000);
+}
+
+function completeDemoMode() {
+    stopDemoMode(true);
+    statusEl.textContent = "Démo terminée ! À vous de jouer.";
+    showDemoModal();
+}
+
+function stopDemoMode(skipModal = false) {
+    if (demoTimeoutId) {
+        clearTimeout(demoTimeoutId);
+        demoTimeoutId = null;
+    }
+    if (!demoMode) {
+        setControlsDisabled(false);
+        if (!skipModal) {
+            showDemoModal();
+        }
+        return;
+    }
+    demoMode = false;
+    demoMoves = [];
+    setControlsDisabled(false);
+    if (!skipModal) {
+        showDemoModal();
+    }
+}
+
+function setControlsDisabled(disabled) {
+    startBtn.disabled = disabled;
+    ringInput.disabled = disabled;
+    if (demoBtn) demoBtn.disabled = disabled;
+}
+
+function showDemoModal() {
+    if (!demoModal) return;
+    demoModal.classList.remove("hidden");
+}
+
+function hideDemoModal() {
+    if (!demoModal) return;
+    demoModal.classList.add("hidden");
 }
 
 // Initial rendering so the layout is not empty on load.
