@@ -13,17 +13,50 @@
     <div class="animated-bg"></div>
     <main class="page">
         <section class="panel">
-            <h1>Tours d'Hanoï</h1>
+            <div class="panel-header">
+                <h1>Tours d'Hanoï</h1>
+                <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Changer de thème">
+                    <span class="toggle-track">
+                        <span class="toggle-thumb" aria-hidden="true"></span>
+                        <span class="toggle-icon moon" aria-hidden="true">🌙</span>
+                        <span class="toggle-icon sun" aria-hidden="true">☀️</span>
+                    </span>
+                </button>
+            </div>
             <div class="controls">
                 <label for="ring-count">Nombre d'anneaux</label>
                 <input id="ring-count" type="number" min="3" max="8" value="4">
                 <button id="start-btn">Démarrer</button>
+                <button id="reset-btn" type="button" class="ghost-btn">Reset</button>
                 <button id="demo-btn" class="demo-btn" type="button">
                     <span class="icon" aria-hidden="true">🤖</span>
                     <span>Démo</span>
                 </button>
             </div>
             <p id="status" class="status">Choisissez un nombre d'anneaux puis cliquez sur «&nbsp;Démarrer&nbsp;».</p>
+            <div class="counters">
+                <div class="counter-card">
+                    <h3>Coups joueur</h3>
+                    <p id="player-moves" class="counter-value">0</p>
+                </div>
+                <div class="counter-card">
+                    <h3>Coups démo</h3>
+                    <p id="demo-moves" class="counter-value">0</p>
+                </div>
+            </div>
+            <div class="scoreboard">
+                <h2>Tableau des scores</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Anneaux</th>
+                            <th>Coups minimum</th>
+                            <th>Meilleur score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="score-rows"></tbody>
+                </table>
+            </div>
         </section>
         <section class="board" aria-live="polite">
             <div class="tower" data-index="0" tabindex="0">
@@ -39,6 +72,7 @@
                 <div class="peg"></div>
             </div>
             <div class="effects-layer" id="effects-layer" aria-hidden="true"></div>
+            <div class="motion-layer" id="motion-layer" aria-hidden="true"></div>
             <div class="overlay-message hidden" id="win-overlay" role="alert">Bravo ! 🎉</div>
             <div class="overlay-message overlay-error hidden" id="error-overlay" role="alert">Mouvement interdit</div>
         </section>
